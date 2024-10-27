@@ -1,0 +1,58 @@
+services:
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8090:8080
+    networks:
+      - intnet
+    depends_on:
+      - postgres
+ 
+  evolution-api:
+    container_name: evolution_api
+    image: atendai/evolution-api:v2.1.2
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./evolution_instances:/evolution/instances
+    networks:
+      - intnet
+ 
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_USER: admin
+      POSTGRES_DB: db-evolution
+    ports:
+      - 5432:5432
+    networks:
+      - intnet
+    expose:
+      - 5450
+ 
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "{RABBITMQ_EXTERNAL_PORT}:5672"  # Porta para comunicação AMQP
+      - "{RABBITMQ_EXTERNAL_PORT_ADMIN}:15672"  # Porta para o painel de controle do RabbitMQ (interface web)
+    networks:
+      - intnet
+ 
+    volumes:
+     - ./rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"  # Usuário padrão (por padrão, é "guest")
+      RABBITMQ_DEFAULT_PASS: "guest"  # Senha padrão (por padrão, é "guest")
+
+
+networks:
+  intnet:
+   
+volumes:
+  evolution_instances:
